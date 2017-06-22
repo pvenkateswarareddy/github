@@ -1,0 +1,32 @@
+---
+- name: Turn off Jenkins Initial setup wizard.
+  lineinfile:
+    dest: /etc/default/jenkins
+    regexp: '^JAVA_ARGS='
+    line: 'JAVA_ARGS="-Djava.awt.headless=true -Djenkins.install.runSetupWizard=false"'
+  notify:
+    - restart jenkins
+- name: Wait for Jenkins to start up before proceeding.
+  shell: "curl -D - --silent --max-time 5 http://{{ jenkins_hostname }}:{{ jenkins_http_port }}/cli/"
+  register: result
+  until: (result.stdout.find("403 Forbidden") != -1) or (result.stdout.find("200 OK") != -1) and (result.stdout.find("Please wait while") == -1)
+  retries: "{{ jenkins_connection_retries }}"
+  delay: "{{ jenkins_connection_delay }}"
+  changed_when: false
+  check_mode: no
+- include: plugin.yml 
+- name: Create custom init scripts directory.
+  file:
+    path: "{{ jenkins_home }}/init.groovy.d"
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: 0775
+- name: configure default users.
+  template: src=basic-security.groovy dest={{ jenkins_home }}/init.groovy.d/basic-security.groovy 
+  register: jenkins_users_config
+
+
+- name: Immediately restart Jenkins on http or user changes.
+  service: name=jenkins state=restarted
+  when: (jenkins_users_config is defined and jenkins_users_config.changed)

@@ -1,0 +1,30 @@
+---
+ - name: dependencies
+   become: yes
+   apt: name={{ item }} state=installed
+   with_items: "{{ dependencies }}" 
+ - name: update apt repository
+   become: yes
+   command: "apt-get update" 
+ - name: Install Debian dependencies
+   become: yes
+   apt: name={{ item }} state=installed
+   with_items: "{{ dependencies }}"
+
+ - name: adding apt key.
+   apt_key:
+    id: "{{jenkins_apt_key_id}}"
+    url: "{{ jenkins_apt_key }} state:present "
+    
+ - name: adding jenkins repo.
+   apt_repository:
+    repo: "{{ jenkins_apt_repository }}"
+    
+
+
+ - name: Ensure Jenkins is installed.
+   become: yes
+   apt: pkg=jenkins state=installed
+
+ - include: config.yml
+ - include: user.yml
