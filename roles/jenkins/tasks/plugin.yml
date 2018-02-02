@@ -1,14 +1,7 @@
 ---
-- name: Get the jenkins-cli jarfile from the Jenkins server.
-  get_url:
-    url: "http://{{ jenkins_hostname }}:{{ jenkins_http_port }}/jnlpJars/jenkins-cli.jar"
-    dest: "{{ jenkins_jar_location }}"
-  register: jarfile_get
-  until: "'OK' in jarfile_get.msg or 'file already exists' in jarfile_get.msg"
-  retries: 5
-  delay: 10
   
-- name: Install Jenkins plugins.
+
+- name: installing plugin {{ plugins }}.
   jenkins_plugin:
     name: "{{ item }}"
     params:
@@ -16,6 +9,10 @@
       url_password: "{{ jenkins_admin_password }}"
     updates_expiration: "{{ jenkins_plugin_updates_expiration }}"
     url: "http://{{ jenkins_hostname }}:{{ jenkins_http_port }}{{ jenkins_url_prefix }}"
+    validate_certs: false
   with_items: "{{ plugins }}"
-  notify: restart jenkins
+- name: restart jenkins
+  service: name=jenkins state=restarted
+  become: yes
+
   
