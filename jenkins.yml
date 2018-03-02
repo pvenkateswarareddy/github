@@ -1,6 +1,6 @@
 ---
 
-- hosts: jdk 
+- hosts: jenkins
   roles:
 
     - { role: common, become=true }
