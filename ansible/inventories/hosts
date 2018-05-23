@@ -1,0 +1,8 @@
+[master-server]
+192.168.106.147
+
+[client-server]
+192.168.106.148
+
+[tomcat-servers]
+webserver1
